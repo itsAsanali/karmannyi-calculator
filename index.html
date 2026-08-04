@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карманный калькулятор</title>
+    <link rel="icon" href="https://i.pinimg.com/originals/b5/bd/57/b5bd57770f6fa3b82912428dc4d9e905.jpg?nii=t">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+        }
+
+        .calculator {
+            width: 280px;
+            background-color: #22252d;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .display {
+            background-color: #2a2d37;
+            color: #ffffff;
+            font-size: 2rem;
+            text-align: right;
+            padding: 20px 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            word-wrap: break-word;
+            word-break: break-all;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .display-history {
+            font-size: 0.9rem;
+            color: #7b7f8e;
+            min-height: 20px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            background-color: #2f3442;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #3b4252;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-operator {
+            background-color: #ff9f0a;
+            color: #ffffff;
+        }
+
+        .btn-operator:hover {
+            background-color: #ffb13b;
+        }
+
+        .btn-action {
+            background-color: #a5a6f6;
+            color: #22252d;
+            font-weight: bold;
+        }
+
+        .btn-action:hover {
+            background-color: #bcbdff;
+        }
+
+        .btn-zero {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <div class="display">
+            <div class="display-history" id="history"></div>
+            <div id="result">0</div>
+        </div>
+        <div class="buttons">
+            <button class="btn-action" onclick="clearCalculator()">AC</button>
+            <button class="btn-action" onclick="deleteDigit()">⌫</button>
+            <button class="btn-operator" onclick="appendOperator('%')">%</button>
+            <button class="btn-operator" onclick="appendOperator('/')">÷</button>
+            
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="btn-operator" onclick="appendOperator('*')">×</button>
+            
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="btn-operator" onclick="appendOperator('-')">-</button>
+            
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="btn-operator" onclick="appendOperator('+')">+</button>
+            
+            <button class="btn-zero" onclick="appendNumber('0')">0</button>
+            <button onclick="appendNumber('.')">.</button>
+            <button class="btn-operator" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        const resultElement = document.getElementById('result');
+        const historyElement = document.getElementById('history');
+        
+        let currentInput = '0';
+        let historyString = '';
+        let resetScreen = false;
+
+        function updateDisplay() {
+            resultElement.textContent = currentInput;
+            historyElement.textContent = historyString;
+        }
+
+        function appendNumber(number) {
+            if (currentInput === '0' || resetScreen) {
+                currentInput = number;
+                resetScreen = false;
+            } else {
+                if (number === '.' && currentInput.includes('.')) return;
+                currentInput += number;
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(operator) {
+            if (resetScreen) resetScreen = false;
+            historyString += currentInput + ' ' + operator + ' ';
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        function calculate() {
+            try {
+                let expression = historyString + currentInput;
+                // Заменяем визуальные знаки на математические для eval
+                let sanitizedExpression = expression.replace(/×/g, '*').replace(/÷/g, '/');
+                
+                let evalResult = eval(sanitizedExpression);
+                
+                // Округляем во избежание проблем с плавающей точкой
+                evalResult = Math.round(evalResult * 100000000) / 100000000;
+                
+                historyString = expression + ' =';
+                currentInput = evalResult.toString();
+                resetScreen = true;
+                updateDisplay();
+            } catch (error) {
+                currentInput = 'Ошибка';
+                resetScreen = true;
+                updateDisplay();
+            }
+        }
+
+        function clearCalculator() {
+            currentInput = '0';
+            historyString = '';
+            resetScreen = false;
+            updateDisplay();
+        }
+
+        function deleteDigit() {
+            if (resetScreen) return;
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+    </script>
+</body>
+</html>
